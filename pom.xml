@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  octomem: каркас сборки (T-001).
+
+  Границы: основной JAR с байткодом release 25, ноль сторонних runtime-зависимостей
+  (только стандартная библиотека OpenJDK), воспроизводимая временная метка сборки.
+  Тестовые зависимости объявляются в области test и в серверный JAR не попадают.
+  Документация: docs/java-platform.md, ЧТЗ-09 (docs/05), tasks/T-001-build-skeleton.md.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>ru.octomem</groupId>
+  <artifactId>octomem</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <name>octomem</name>
+  <description>Сервер оперативного кеширования, совместимый с текстовым протоколом Memcached</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- Фиксированная временная метка воспроизводимой сборки (ЧТЗ-09-R04). -->
+    <project.build.outputTimestamp>2026-09-14T00:00:00Z</project.build.outputTimestamp>
+
+    <!-- Платформа: OpenJDK 25, release 25 (docs/java-platform.md). Java 17 исключена. -->
+    <maven.compiler.release>25</maven.compiler.release>
+
+    <!-- Точка входа исполняемого JAR. -->
+    <octomem.mainClass>ru.octomem.cli.Main</octomem.mainClass>
+
+    <!-- Зафиксированные версии подключаемых плагинов. Остальные плагины жизненного
+         цикла берутся из фиксированного распределения Maven 3.9.16 (см. wrapper). -->
+    <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
+    <maven-jar-plugin.version>3.5.1</maven-jar-plugin.version>
+    <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
+    <maven-failsafe-plugin.version>3.6.0</maven-failsafe-plugin.version>
+    <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
+    <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
+    <junit-jupiter.version>5.14.4</junit-jupiter.version>
+    <gson.version>2.13.2</gson.version>
+  </properties>
+
+  <dependencies>
+    <!--
+      Зависимости только области test (JUnit для тестов, Gson для разбора манифеста
+      в независимом тесте). runtime-зависимостей нет; плагин enforcer ниже запрещает
+      зависимости областей compile/runtime. В серверный JAR тестовые зависимости не попадают.
+    -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      JSON-разбор манифеста совместимости в независимом интеграционном тесте
+      CompatibilityManifestIT. Только область test; в серверный JAR не входит.
+    -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${gson.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-build-contract</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>[3.9.16,4.0.0)</version>
+                  <message>Build must run with the pinned Maven Wrapper (3.9.16).</message>
+                </requireMavenVersion>
+                <requireJavaVersion>
+                  <version>[25,26)</version>
+                  <message>Primary platform is OpenJDK 25; Oracle JDK 21 and Java 17 are forbidden.</message>
+                </requireJavaVersion>
+                <banDynamicVersions/>
+                <bannedDependencies>
+                  <message>Only test-scoped dependencies are allowed; the server uses the OpenJDK standard library only.</message>
+                  <excludes>
+                    <exclude>*:*:*:*:compile</exclude>
+                    <exclude>*:*:*:*:runtime</exclude>
+                    <exclude>*:*:*:*:provided</exclude>
+                    <exclude>*:*:*:*:system</exclude>
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <!-- Никаких preview/incubator и внутренних API (docs/java-platform.md). -->
+          <showWarnings>true</showWarnings>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <useModulePath>false</useModulePath>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${maven-failsafe-plugin.version}</version>
+        <configuration>
+          <useModulePath>false</useModulePath>
+        </configuration>
+        <executions>
+          <execution>
+            <id>verify-packaged-artifact</id>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>${octomem.mainClass}</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven-dependency-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>runtime-dependency-tree</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>tree</goal>
+            </goals>
+            <configuration>
+              <scope>runtime</scope>
+              <outputType>json</outputType>
+              <outputFile>${project.build.directory}/runtime-dependency-tree.json</outputFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <!-- Test-JVM instrumentation only; use clean verify -Pcoverage for fresh evidence. -->
+    <profile>
+      <id>coverage</id>
+      <properties>
+        <jacoco.version>0.8.15</jacoco.version>
+        <coverageAgentArgLine/>
+        <argLine/>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>@{coverageAgentArgLine} @{argLine}</argLine>
+              <forkCount>1</forkCount>
+              <reuseForks>true</reuseForks>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <argLine>@{coverageAgentArgLine} @{argLine}</argLine>
+              <forkCount>1</forkCount>
+              <reuseForks>true</reuseForks>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>require-coverage-data</id>
+                <phase>verify</phase>
+                <goals><goal>enforce</goal></goals>
+                <configuration>
+                  <rules>
+                    <requireFilesExist>
+                      <files><file>${project.build.directory}/jacoco.exec</file></files>
+                    </requireFilesExist>
+                  </rules>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco.version}</version>
+            <executions>
+              <execution>
+                <id>coverage-unit-agent</id>
+                <goals><goal>prepare-agent</goal></goals>
+                <configuration>
+                  <propertyName>coverageAgentArgLine</propertyName>
+                  <append>false</append>
+                </configuration>
+              </execution>
+              <execution>
+                <id>coverage-integration-agent</id>
+                <phase>pre-integration-test</phase>
+                <goals><goal>prepare-agent</goal></goals>
+                <configuration>
+                  <propertyName>coverageAgentArgLine</propertyName>
+                  <append>true</append>
+                </configuration>
+              </execution>
+              <execution>
+                <id>coverage-merge-children</id>
+                <phase>verify</phase>
+                <goals><goal>merge</goal></goals>
+                <configuration>
+                  <fileSets>
+                    <fileSet>
+                      <directory>${project.build.directory}</directory>
+                      <includes><include>jacoco.exec</include><include>child-coverage/*.exec</include></includes>
+                    </fileSet>
+                  </fileSets>
+                  <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+                </configuration>
+              </execution>
+              <execution>
+                <id>coverage-report</id>
+                <phase>verify</phase>
+                <goals><goal>report</goal></goals>
+                <configuration>
+                  <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+                  <formats><format>XML</format><format>HTML</format></formats>
+                </configuration>
+              </execution>
+              <execution>
+                <id>coverage-thresholds</id>
+                <phase>verify</phase>
+                <goals><goal>check</goal></goals>
+                <configuration>
+                  <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+                  <rules>
+                    <rule>
+                      <element>BUNDLE</element>
+                      <limits>
+                        <limit><counter>BRANCH</counter><value>TOTALCOUNT</value><minimum>1</minimum></limit>
+                        <limit><counter>BRANCH</counter><value>COVEREDRATIO</value><minimum>0.85</minimum></limit>
+                      </limits>
+                    </rule>
+                    <rule>
+                      <element>CLASS</element>
+                      <limits>
+                        <limit><counter>BRANCH</counter><value>COVEREDRATIO</value><minimum>0.85</minimum></limit>
+                      </limits>
+                    </rule>
+                    <rule>
+                      <element>PACKAGE</element>
+                      <includes><include>ru.octomem.util</include><include>ru.octomem.config</include><include>ru.octomem.storage</include><include>ru.octomem.transport</include><include>ru.octomem.protocol</include><include>ru.octomem.engine</include><include>ru.octomem.expiry</include><include>ru.octomem.eviction</include></includes>
+                      <limits>
+                        <limit><counter>BRANCH</counter><value>TOTALCOUNT</value><minimum>1</minimum></limit>
+                        <limit><counter>BRANCH</counter><value>COVEREDRATIO</value><minimum>0.95</minimum></limit>
+                      </limits>
+                    </rule>
+                    <rule>
+                      <element>CLASS</element>
+                      <includes><include>ru.octomem.util.*</include><include>ru.octomem.config.*</include><include>ru.octomem.storage.*</include><include>ru.octomem.transport.*</include><include>ru.octomem.protocol.*</include><include>ru.octomem.engine.*</include><include>ru.octomem.expiry.*</include><include>ru.octomem.eviction.*</include></includes>
+                      <limits>
+                        <limit><counter>BRANCH</counter><value>COVEREDRATIO</value><minimum>0.95</minimum></limit>
+                      </limits>
+                    </rule>
+                  </rules>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

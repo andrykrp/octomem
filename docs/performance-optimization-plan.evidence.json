@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "taskId": "task_f61d53355f98",
+  "dispatchId": "ctx_6adec30d94c8",
+  "runId": "run_3da2786de276",
+  "authorModel": "r37b/gpt-6-astra",
+  "scope": "Document-only static source and existing evidence analysis; no independent release acceptance",
+  "reportPath": "docs/performance-optimization-plan.md",
+  "ownedFiles": ["docs/performance-optimization-plan.md", "docs/performance-optimization-plan.evidence.json"],
+  "inputHashManifest": {
+    "algorithm": "SHA-256",
+    "roots": ["src", "tests/platform", "tests/harness_tests"],
+    "additionalFile": "pom.xml",
+    "selection": "All recursive files including test resources and existing __pycache__; final Get-ChildItem -Force audit confirmed the same 243-file set and digest, so no additional hidden files were omitted",
+    "canonicalization": "Windows PowerShell 5.1: enumerate Get-ChildItem -LiteralPath src,tests/platform,tests/harness_tests -Recurse -File; add Get-Item pom.xml; Sort-Object -Unique absolute paths; each row is root-relative path with forward slashes, one ASCII space, lowercase Get-FileHash SHA256; join rows with LF and append final LF; SHA256 UTF-8 bytes without BOM",
+    "before": {"utc": "2026-09-17T10:33:26.1219744Z", "fileCount": 243, "sha256": "096fa05c7aee37e8994247d1a034662bef891deb9e70c544f08e0d023c586e9a"},
+    "after": {"utc": "2026-09-17T10:41:44.0801022Z", "fileCount": 243, "sha256": "096fa05c7aee37e8994247d1a034662bef891deb9e70c544f08e0d023c586e9a"},
+    "equal": true,
+    "finalIncludingHiddenAudit": {"utc": "2026-09-17T10:43:33.3321640Z", "fileCount": 243, "sha256": "096fa05c7aee37e8994247d1a034662bef891deb9e70c544f08e0d023c586e9a", "equalToBefore": true},
+    "groupCommitmentsBefore": [
+      {"root": "src/main", "fileCount": 76, "sha256": "8a44397fe589ded079cdcd50056c5c12720d94acdc95e37f712480d96b919cde"},
+      {"root": "src/test", "fileCount": 68, "sha256": "544cbe37e05d78c9df0b225774d47276689d7106381adb7c205fa38dc5e392b6"},
+      {"root": "tests/platform", "fileCount": 84, "sha256": "716febfdf46bca1c8cc04c3fb604961179dec393d69ed697a9125340d22cfae9"},
+      {"root": "tests/harness_tests", "fileCount": 14, "sha256": "ad8a730901048bbf7b4bfb5335fd9e04e5e777cad02a5670150168b8927e5281"}
+    ],
+    "manifestStorage": "Minimal aggregate commitments in this artifact; the full 243 path/hash rows were printed in the before-hash tool result in this worker session, not duplicated into a third file"
+  },
+  "individualInputs": [
+    {"path": "target/octomem-1.0.0.jar", "beforeSha256": "63764015708edbdcb2284df53e827fa5cf2d58e904e73d3004d3f7d0165f9b70", "afterSha256": "63764015708edbdcb2284df53e827fa5cf2d58e904e73d3004d3f7d0165f9b70", "matchesCurrentDocumentedPin": true},
+    {"path": "pom.xml", "beforeSha256": "f3ea25a751f2508d4a3f5823e13a7ce34bd8b37c20af4d4f4b32f06dcc666c17", "afterSha256": "f3ea25a751f2508d4a3f5823e13a7ce34bd8b37c20af4d4f4b32f06dcc666c17"},
+    {"path": "tests/run-checks.ps1", "beforeSha256": "93a2eba8e630ee1393185b8f5743d9fe7100cd4a116f219f255efb38ccaaea35", "afterSha256": "93a2eba8e630ee1393185b8f5743d9fe7100cd4a116f219f255efb38ccaaea35"},
+    {"path": "tests/TESTING-METHOD.md", "beforeSha256": "91d3c3820ae9b0a82764655cf2d6fca3880d82d4b9ea2ba090a337f97f11a9af", "afterSha256": "91d3c3820ae9b0a82764655cf2d6fca3880d82d4b9ea2ba090a337f97f11a9af"}
+  ],
+  "readEvidence": [
+    ".opencode/autonomous/run_3da2786de276-optimization-plan.md",
+    ".opencode/skills/java-cache-performance/SKILL.md",
+    "docs/development.md",
+    "docs/java-platform.md",
+    "docs/03-architecture-specification.md (relevant sections via content search)",
+    "docs/04-protocol-compatibility-specification.md (relevant sections via content search)",
+    "docs/adr/ADR-016-bounded-command-snapshots.md",
+    "tests/README.md",
+    "tests/TESTING-METHOD.md",
+    "tests/reports/release/testing-rework/STATUS.md",
+    "tests/reports/release/astra-test-review/astra-q2-q4-task_a53a3f7f65c5.md",
+    "Source files and exact methods cited in report; perf contracts and collector window/plan declarations; cited test classes/method names"
+  ],
+  "verification": {
+    "productionTestPomHarnessManifestUnchanged": true,
+    "candidateHashVerifiedLocally": true,
+    "sourceReferences": "Read source methods and line ranges; test existence/names checked with Glob/Grep and before-hash manifest",
+    "documentSelfReview": "Completed static reread; clarified classify precedence and existing empty-class fast check",
+    "independentDocumentReview": "PASS_DOCUMENT_SCOPE: task_53ce98c40687 / ctx_7e7e90064fec; R1 clarified and independently closed by task_af5402842421 / ctx_08036fa78df2, message msg_8d9628425fc2",
+    "coordinatorFinalInputCommitment": "243 files: 096fa05c7aee37e8994247d1a034662bef891deb9e70c544f08e0d023c586e9a; unchanged after documentation correction",
+    "buildsTestsProfilesBenchmarks": "NOT_RUN_BY_THIS_WORKER",
+    "remoteSecretCommitOperations": "NOT_PERFORMED",
+    "subworkers": "NONE"
+  },
+  "limitations": [
+    "Hash equality establishes selected file bytes at two endpoints, not absence of transient changes or bytecode reproducibility",
+    "Historical numerical examples are quoted from Astra Q2 review, not recomputed from every raw sample by this worker",
+    "Existing reported test results are attribution to STATUS, not fresh execution",
+    "Current full performance remains INCONCLUSIVE; Docker-v1 host does not provide required cgroup-v2 qualification",
+    "No performance bottleneck, gain, RSS asymptote, M3 attainability or release readiness certified",
+    "Second machine unqualified; 72-hour test NOT_RUN; proposed diagnostic commands require separate approval and runtime availability checks"
+  ]
+}

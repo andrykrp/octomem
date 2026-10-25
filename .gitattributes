@@ -1,0 +1,5 @@
+# Preserve source/evidence identities across Windows/Linux checkouts.
+# In particular, immutable pinned scripts contain intentional mixed line endings.
+* -text
+mvnw text eol=lf
+mvnw.cmd text eol=crlf

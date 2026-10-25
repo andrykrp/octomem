@@ -1,0 +1,248 @@
+{
+  "manifestVersion": "1.0",
+  "octomemVersion": "1.0.0",
+  "protocol": "text",
+  "protocolNormativeReference": "https://github.com/memcached/memcached/blob/1.6.45/doc/protocol.txt",
+  "referenceMemcachedVersion": "1.6.45",
+  "referenceSourceUrl": "https://www.memcached.org/files/memcached-1.6.45.tar.gz",
+  "referenceSourceArtifact": "memcached-1.6.45.tar.gz",
+  "referenceSourceSizeBytes": 1272659,
+  "referenceSourceSha256": "d362c64e6d8d5287153501eabf7c85b4a761432fbf53f5d7b085d0bb1653c1dd",
+  "referenceSourceSha256Provenance": "SHA-256 computed locally from the official memcached.org release tarball downloaded 2026-09-14; no separate upstream .sha256 file is published at memcached.org/files/. Content verified after extraction: version.m4 defines VERSION_NUMBER 1.6.45 and doc/protocol.txt is present.",
+  "commands": [
+    "get",
+    "gets",
+    "gat",
+    "gats",
+    "set",
+    "add",
+    "replace",
+    "append",
+    "prepend",
+    "cas",
+    "delete",
+    "incr",
+    "decr",
+    "touch",
+    "flush_all",
+    "stats",
+    "stats items",
+    "stats slabs",
+    "stats reset",
+    "version",
+    "verbosity",
+    "quit"
+  ],
+  "statsFields": [
+    "pid",
+    "uptime",
+    "time",
+    "version",
+    "pointer_size",
+    "threads",
+    "curr_connections",
+    "total_connections",
+    "connection_structures",
+    "conn_yields",
+    "cmd_get",
+    "cmd_set",
+    "cmd_flush",
+    "cmd_touch",
+    "get_hits",
+    "get_misses",
+    "delete_hits",
+    "delete_misses",
+    "incr_hits",
+    "incr_misses",
+    "decr_hits",
+    "decr_misses",
+    "cas_hits",
+    "cas_misses",
+    "cas_badval",
+    "touch_hits",
+    "touch_misses",
+    "curr_items",
+    "total_items",
+    "bytes",
+    "reclaimed",
+    "expired_unfetched",
+    "evicted_unfetched",
+    "limit_maxbytes",
+    "evictions",
+    "bytes_read",
+    "bytes_written"
+  ],
+  "statsItemsFields": [
+    "items:N:number",
+    "items:N:age",
+    "items:N:evicted",
+    "items:N:evicted_nonzero",
+    "items:N:evicted_time",
+    "items:N:outofmemory",
+    "items:N:tailrepairs",
+    "items:N:reclaimed",
+    "items:N:expired_unfetched",
+    "items:N:evicted_unfetched",
+    "items:N:crawler_reclaimed"
+  ],
+  "statsSlabsFields": [
+    "N:chunk_size",
+    "N:chunks_per_page",
+    "N:total_pages",
+    "N:total_chunks",
+    "N:used_chunks",
+    "N:free_chunks",
+    "N:free_chunks_end",
+    "N:get_hits",
+    "N:cmd_set",
+    "N:delete_hits",
+    "N:incr_hits",
+    "N:decr_hits",
+    "N:cas_hits",
+    "N:cas_badval",
+    "N:mem_requested"
+  ],
+  "itemMaxSize": {
+    "defaultBytes": 1048576,
+    "limitSetting": "settings.item_size_max",
+    "semantics": "Full stored record budget: the limit applies to the total in-memory record size covering the key, the service fields (flags and CAS) and the value, not the value length alone.",
+    "referenceBoundary": {
+      "status": "MEASURED",
+      "detail": "The accepted/rejected value boundary of reference Memcached 1.6.45 and of the octomem candidate JAR was measured by a bounded calibration on one stand: for key bytes {1, 16, 250} and flags {0, 1, 65535, 4294967295}, against a 1 MiB full-record budget (reference -I 1m; candidate --item.maxSize=1m), the reference accepted up to 1048263-1048516 bytes and the candidate up to 1048294-1048543 bytes. The reference boundary is flags-sensitive (flags=0 admits 4 more bytes than flags != 0); the candidate boundary is flags-insensitive. This is a bounded calibration on one stand, NOT release acceptance and NOT a PASS; it does not establish an ABI- or build-independent formula and is not transferable to other item_size_max settings without re-measurement.",
+      "calibration": {
+        "rawPath": "tests/reports/release/perf-qual/rosa-20260918-6pairs/attempt-9c62c1250095424eac29376414587680/calibration.json",
+        "rawSha256": "3ddce056a884fbcc866a32a8dc166411b42611017d422132b5401f199bf7476e",
+        "measuredDate": "2026-09-18",
+        "reference": {
+          "version": "1.6.45",
+          "binarySha256": "3b3d42501043b5c6eb58c7824186409413a5d0d4fcf70addeae35f549252d525",
+          "keyVariants": [1, 16, 250],
+          "acceptedRange": {
+            "min": 1048263,
+            "max": 1048516,
+            "byKey": {
+              "1": {"flags0": 1048516, "flagsNonzero": 1048512},
+              "16": {"flags0": 1048501, "flagsNonzero": 1048497},
+              "250": {"flags0": 1048267, "flagsNonzero": 1048263}
+            }
+          },
+          "rejectedRange": {
+            "min": 1048264,
+            "max": 1048517,
+            "byKey": {
+              "1": {"flags0": 1048517, "flagsNonzero": 1048513},
+              "16": {"flags0": 1048502, "flagsNonzero": 1048498},
+              "250": {"flags0": 1048268, "flagsNonzero": 1048264}
+            }
+          },
+          "flagsSensitivity": "sensitive: flags=0 admits 4 more bytes than flags in {1, 65535, 4294967295}"
+        },
+        "candidate": {
+          "jarSha256": "950a8edb702e51c9979320c117257426f1109076845e80f30774ef0855ff682b",
+          "keyVariants": [1, 16, 250],
+          "acceptedRange": {
+            "min": 1048294,
+            "max": 1048543,
+            "byKey": {"1": 1048543, "16": 1048528, "250": 1048294}
+          },
+          "rejectedRange": {
+            "min": 1048295,
+            "max": 1048544,
+            "byKey": {"1": 1048544, "16": 1048529, "250": 1048295}
+          },
+          "flagsSensitivity": "insensitive: accepted and rejected identical for flags in {0, 1, 65535, 4294967295}"
+        },
+        "applicability": {
+          "stand": "rosa-20260918-6pairs single host: ROSA Fresh Desktop 13.2, two-vCPU Pentium E5700, cgroup v2, one server core and one client core",
+          "bounded": true,
+          "releaseAcceptance": false
+        }
+      }
+    }
+  },
+  "versionString": "1.0.0 (octomem)",
+  "platforms": [
+    {
+      "role": "primary",
+      "javaPlatform": "OpenJDK 25",
+      "jdkDistribution": "Eclipse Temurin (Adoptium)",
+      "jdkVersion": "25.0.4.1+1",
+      "jdkScmRef": "jdk-25.0.4.1+1_adopt",
+      "jdkLicense": "GPLv2 with Classpath Exception",
+      "jdkArchiveName": "OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1.zip",
+      "jdkArchiveUrl": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.4.1%2B1/OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1.zip",
+      "jdkArchiveSha256": "00c847d804f4a78e9f04f2683faf14fed898535b177b7fc704486cb0284e9283",
+      "osName": "Windows",
+      "osVersion": "11",
+      "osBuild": "10.0.26200",
+      "cpuArchitecture": "amd64",
+      "bytecodeRelease": 25,
+      "verificationStatus": "selected-target-not-yet-verified-on-stand"
+    }
+  ],
+  "platformRequirements": {
+    "trustedOsCount": 2,
+    "distinctRightsholders": true,
+    "requiredJavaRelease": 25,
+    "verificationStatus": "NOT_RUN",
+    "accessStatus": "unavailable",
+    "requirement": "Two trusted operating systems with distinct rights owners, separate from the primary build host, must be verified on real stands. No operating system is claimed as verified and the TEST-08 platform matrix has not started."
+  },
+  "knownDifferences": [
+    {
+      "difference": "No binary protocol",
+      "reason": "Release 1.0 scope limit",
+      "status": "P3"
+    },
+    {
+      "difference": "No meta commands (mg, ms, md, ma)",
+      "reason": "Release 1.0 scope limit",
+      "status": "P2"
+    },
+    {
+      "difference": "No stats sizes, stats conns, stats cachedump",
+      "reason": "Rarely used; accounting cost",
+      "status": "P2"
+    },
+    {
+      "difference": "No UDP",
+      "reason": "Simplification and safety",
+      "status": "P2 on request"
+    },
+    {
+      "difference": "No SASL",
+      "reason": "Matches default Memcached behavior; security is network-level",
+      "status": "P2"
+    },
+    {
+      "difference": "No non-standard watch, lru_crawler, cache_memlimit, shutdown",
+      "reason": "Administrative commands outside the protocol",
+      "status": "not planned"
+    },
+    {
+      "difference": "Repeated keys in get are emitted once",
+      "reason": "Defined in docs/04 section 3.4",
+      "status": "known difference"
+    },
+    {
+      "difference": "Legacy delete <time> argument is accepted and ignored",
+      "reason": "Compatibility with old clients",
+      "status": "known difference"
+    },
+    {
+      "difference": "Single LF accepted as line terminator",
+      "reason": "Robustness for non-standard clients",
+      "status": "known difference"
+    },
+    {
+      "difference": "Command line length limit (default 8192 bytes)",
+      "reason": "Overload protection",
+      "status": "known difference; configurable"
+    },
+    {
+      "difference": "version string contains the octomem marker",
+      "reason": "Honest provenance",
+      "status": "known difference"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+# Local toolchains, build products and caches (never product source).
+/.tools/
+/target/
+**/target/
+**/__pycache__/
+*.py[cod]
+/.opencode/auto-omo-gpt/
+/.opencode/autonomous/
+/.opencode/logs/
+
+# Retain local raw evidence, but do not publish generated archives, process logs,
+# temporary credentials/certificates or downloaded reference implementations.
+/tests/reports/**
+/exp/reports/**
+/tasks/reports/**
+/tests/instrumentation/out/
+# Operator-specific historical stand orchestration is retained locally.
+/tests/platform/stand/
+/tests/environment/
+/docs/release/08-rosa-stand.md
+/docs/release/10-stand-148.md
+/tests/platform/perf/stand-launch.sh
+hs_err_pid*.log
+replay_pid*.log
+*.log
+*.jfr
+*.hprof
+*.dmp
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.jar
+*.class
+*.whl
+*.exe
+*.dll
+*.so
+*.p12
+*.pfx
+*.jks
+*.key
+*.pem
+.env
+.env.*
+!.env.example
+credentials.json
+users.txt
+keystore-password*
+
+# IDE/machine state.
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
