@@ -34,6 +34,8 @@ public final class ExtendedRequest implements AutoCloseable {
     public boolean metaStore;
     public String[] orderedFlags;
     ru.octomem.storage.StoredItem.Reservation admitted;
+    // Connection-confined accounting: one command, never one native retry.
+    boolean storageCounted;
     /** Cancels any unpublished header reservation; idempotent after transfer. */
     @Override public void close(){if(admitted!=null){admitted.close();admitted=null;}}
 }

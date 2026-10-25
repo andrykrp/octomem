@@ -736,6 +736,7 @@ public final class DefaultCacheEngine implements CacheEngine, StorageAdmission {
         boolean[] nativeDenied={false};
         ByteBuffer scratch=ByteBuffer.allocate(256);
         try {
+            if(request.binaryProtocol && request.admitted!=null)countExtendedStorage(request);
             for(int attempt=0;;attempt++) {
                 nativeDenied[0]=false;
                 ExtendedResult result=table.transaction(table.segmentId(request.key,0,request.key.length),
@@ -764,12 +765,28 @@ public final class DefaultCacheEngine implements CacheEngine, StorageAdmission {
         int cls=classFor(size);
         for(int attempt=0;;attempt++) {
             StoredItem.ReservationResult a=StoredItem.reserve(serviceBudget,allocator,r.key.length,length,settings.itemMaxSize);
-            if(a.reservation()!=null){r.admitted=a.reservation();return ExtendedResult.Status.OK;}
+            if(a.reservation()!=null){
+                r.admitted=a.reservation();
+                try{
+                    if(r.metaStore)countExtendedStorage(r);
+                    return ExtendedResult.Status.OK;
+                }catch(RuntimeException|Error failure){
+                    try{r.close();}catch(RuntimeException|Error cleanup){failure.addSuppressed(cleanup);}
+                    throw failure;
+                }
+            }
             if(!a.nativeDenied() || attempt==RETRIES || !preflight(item->item.keyEquals(r.key,0,r.key.length),cls)) {
                 if(a.nativeDenied() && (r.operation==ExtendedRequest.Operation.SET || r.metaStore))rejectExtendedSet(r.key);
                 capacityDenied();return ExtendedResult.Status.OUT_OF_MEMORY;
             }
         }
+    }
+
+    private void countExtendedStorage(ExtendedRequest request){
+        if(request.storageCounted)return;
+        if(classStats!=null)classStats.incrementClass(request.admitted.classId(),Counter.CMD_SET,1);
+        else count(Counter.CMD_SET);
+        request.storageCounted=true;
     }
 
     private ExtendedResult extended(SegmentedItemTable.Transaction tx,ExtendedRequest r,ByteBuffer scratch,
@@ -784,7 +801,8 @@ public final class DefaultCacheEngine implements CacheEngine, StorageAdmission {
             boolean debug=op==ExtendedRequest.Operation.DEBUG;
             boolean touching=r.hasTtl && !debug;
             if(old==null && (!r.create || debug)) {
-                if(!debug){count(touching?Counter.CMD_TOUCH:Counter.CMD_GET);count(touching?Counter.TOUCH_MISSES:Counter.GET_MISSES);}
+                boolean touchMiss=touching && !r.claimRecache;
+                if(!debug){count(touchMiss?Counter.CMD_TOUCH:Counter.CMD_GET);count(touchMiss?Counter.TOUCH_MISSES:Counter.GET_MISSES);}
                 return new ExtendedResult(ExtendedResult.Status.NOT_FOUND);
             }
             ExtendedResult out=new ExtendedResult(ExtendedResult.Status.OK);
@@ -845,12 +863,20 @@ public final class DefaultCacheEngine implements CacheEngine, StorageAdmission {
         }
         boolean checkCas=r.compareCas && !(r.metaStore && op==ExtendedRequest.Operation.ADD);
         boolean staleCapable=op==ExtendedRequest.Operation.SET || op==ExtendedRequest.Operation.REPLACE;
-        if(checkCas && old!=null && old.casId()!=r.expectedCas
-                && !(r.invalidate && staleCapable
-                && Long.compareUnsigned(r.expectedCas,old.casId())<0)) {count(old,Counter.CAS_BADVAL,1);return new ExtendedResult(ExtendedResult.Status.EXISTS);}
         boolean arithmetic=op==ExtendedRequest.Operation.INCR || op==ExtendedRequest.Operation.DECR;
         boolean append=op==ExtendedRequest.Operation.APPEND || op==ExtendedRequest.Operation.PREPEND;
-        if(checkCas && old==null && !((arithmetic || append) && r.create)){count(Counter.CAS_MISSES);return new ExtendedResult(append?ExtendedResult.Status.NOT_STORED:ExtendedResult.Status.NOT_FOUND);}
+        if(checkCas && old!=null && old.casId()!=r.expectedCas
+                && !(r.invalidate && staleCapable
+                && Long.compareUnsigned(r.expectedCas,old.casId())<0)) {
+            if(op==ExtendedRequest.Operation.DELETE){if(!r.binaryProtocol)count(Counter.DELETE_MISSES);}
+            else if(!arithmetic && !append)count(old,Counter.CAS_BADVAL,1);
+            return new ExtendedResult(ExtendedResult.Status.EXISTS);
+        }
+        if(checkCas && old==null && !((arithmetic || append) && r.create)){
+            if(!append)count(op==ExtendedRequest.Operation.DELETE?Counter.DELETE_MISSES:arithmetic?
+                    op==ExtendedRequest.Operation.INCR?Counter.INCR_MISSES:Counter.DECR_MISSES:Counter.CAS_MISSES);
+            return new ExtendedResult(append?ExtendedResult.Status.NOT_STORED:ExtendedResult.Status.NOT_FOUND);
+        }
         if(op==ExtendedRequest.Operation.DELETE && old==null){count(Counter.DELETE_MISSES);return new ExtendedResult(ExtendedResult.Status.NOT_FOUND);}
         if(op==ExtendedRequest.Operation.ADD && old!=null && !(r.binaryProtocol && r.compareCas)) {
             tx.promote(old); old.recordActivity(activity.incrementAndGet(),now,old.wasFetched());
@@ -920,8 +946,10 @@ public final class DefaultCacheEngine implements CacheEngine, StorageAdmission {
             transferred=true; published(old,item);
             ExtendedResult out=new ExtendedResult(ExtendedResult.Status.OK); describe(out,item,now); out.number=number;
             out.previousTtl=old==null?-1:old.hasExpiry()?old.expiryTime()-now:-1;out.created=old==null;
-            count(item,op==ExtendedRequest.Operation.DELETE?Counter.DELETE_HITS:arithmetic?(op==ExtendedRequest.Operation.INCR?Counter.INCR_HITS:Counter.DECR_HITS):Counter.CMD_SET,1);
-            if(checkCas && !arithmetic && op!=ExtendedRequest.Operation.DELETE)count(item,Counter.CAS_HITS,1);
+            if(op==ExtendedRequest.Operation.DELETE){if(!r.invalidate)count(item,Counter.DELETE_HITS,1);}
+            else if(arithmetic){if(old!=null)count(item,op==ExtendedRequest.Operation.INCR?Counter.INCR_HITS:Counter.DECR_HITS,1);}
+            else if(!r.storageCounted)count(item,Counter.CMD_SET,1);
+            if(checkCas && !arithmetic && !append && op!=ExtendedRequest.Operation.DELETE)count(old,Counter.CAS_HITS,1);
             return out;
         } finally { if(!transferred) item.retire(); }
     }

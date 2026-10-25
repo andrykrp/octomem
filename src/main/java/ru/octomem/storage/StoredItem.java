@@ -81,6 +81,14 @@ public final class StoredItem {
             this.allocator=allocator; this.budget=budget; this.block=block;
             this.keyLength=keyLength; this.valueLength=valueLength;
         }
+        /** Returns the admitted allocation class while this reservation still owns it.
+         * @return immutable class identifier of the reserved native block
+         * @throws IllegalStateException after transfer or cancellation
+         */
+        public synchronized int classId(){
+            if(block==null)throw new IllegalStateException("Reservation no longer owns a block");
+            return block.classId();
+        }
         /** Fills exactly the admitted block, transferring ownership only on success. */
         public synchronized StoredItem finish(byte[] key, ValueSource source, ByteBuffer scratch,
                 int flags, boolean expires, long expiry, long cas) {
